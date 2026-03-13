@@ -9,8 +9,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from scraper.mysteel_scraper import MySteelScraper
-from scraper.alibaba_scraper import AlibabaScraper
+from steel_scrapers import CombinedSteelScraper
 from data_processor import DataProcessor
 from email_sender import EmailSender
 
@@ -23,23 +22,25 @@ def collect_prices():
 
     all_prices = []
 
-    print("[1/3] 正在从我的钢铁网收集数据...")
+    # 从钢材电商平台获取数据
+    print("[1/2] 正在从钢材电商平台收集数据...")
     try:
-        mysteel = MySteelScraper()
-        mysteel_prices = mysteel.get_all_prices()
-        all_prices.extend(mysteel_prices)
-        print(f"✓ 从我的钢铁网获取到 {len(mysteel_prices)} 条数据\n")
+        scraper = CombinedSteelScraper()
+        steel_prices = scraper.get_all_prices()
+        all_prices.extend(steel_prices)
+        print(f"✓ 从钢银电商/欧冶云商/找钢网获取到 {len(steel_prices)} 条数据\n")
     except Exception as e:
-        print(f"✗ 我的钢铁网数据获取失败: {e}\n")
+        print(f"✗ 钢材电商平台数据获取失败: {e}\n")
 
-    print("[2/3] 正在从1688收集参考数据...")
+    # 获取辅料价格
+    print("[2/2] 正在获取辅料价格...")
     try:
-        alibaba = AlibabaScraper()
-        alibaba_prices = alibaba.get_all_reference_prices()
-        all_prices.extend(alibaba_prices)
-        print(f"✓ 从1688获取到 {len(alibaba_prices)} 条参考数据\n")
+        scraper = CombinedSteelScraper()
+        aux_prices = scraper.get_auxiliary_materials()
+        all_prices.extend(aux_prices)
+        print(f"✓ 获取到 {len(aux_prices)} 条辅料价格\n")
     except Exception as e:
-        print(f"✗ 1688数据获取失败: {e}\n")
+        print(f"✗ 辅料价格获取失败: {e}\n")
 
     print(f"{'='*60}")
     print(f"数据收集完成，共获取 {len(all_prices)} 条价格数据")
